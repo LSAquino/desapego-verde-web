@@ -1,0 +1,2 @@
+// This is a dummy script or instruction to the user about icons
+// I'll create a simple green SVG for icons.
