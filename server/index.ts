@@ -19,6 +19,38 @@ const WEBAUTHN_RP_ID = process.env.WEBAUTHN_RP_ID;
 const WEBAUTHN_ORIGIN = process.env.WEBAUTHN_ORIGIN;
 const CORS_ORIGINS = process.env.CORS_ORIGINS;
 
+const normalizeOrigin = (value?: string) => {
+  if (!value) return undefined;
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+
+  try {
+    const url = new URL(trimmed);
+    return `${url.protocol}//${url.host}`;
+  } catch {
+    return trimmed.replace(/\/+$/, '');
+  }
+};
+
+const normalizeRpId = (value?: string) => {
+  if (!value) return undefined;
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+
+  try {
+    const url = new URL(trimmed);
+    return url.hostname;
+  } catch {
+    return trimmed
+      .replace(/^https?:\/\//, '')
+      .replace(/\/+$/, '')
+      .split(':')[0];
+  }
+};
+
+const configuredWebAuthnOrigin = normalizeOrigin(WEBAUTHN_ORIGIN);
+const configuredWebAuthnRpId = normalizeRpId(WEBAUTHN_RP_ID);
+
 // In-memory challenge store (Use Redis/Session in production)
 const challenges = new Map<string, string>();
 
@@ -35,7 +67,7 @@ app.use(express.json());
 // Helper to get RP_ID and ORIGIN dynamically
 const getWebAuthnConfig = (req: any) => {
   const host = req.headers.host || 'localhost:5173';
-  const fallbackOrigin = req.headers.origin || `http://${host}`;
+  const fallbackOrigin = normalizeOrigin(req.headers.origin || `http://${host}`) || `http://${host}`;
 
   let fallbackRpId = host.split(':')[0];
   try {
@@ -44,8 +76,8 @@ const getWebAuthnConfig = (req: any) => {
     // Keep host-based fallback when origin is not a full URL.
   }
 
-  const origin = WEBAUTHN_ORIGIN || fallbackOrigin;
-  const rpID = WEBAUTHN_RP_ID || fallbackRpId;
+  const origin = configuredWebAuthnOrigin || fallbackOrigin;
+  const rpID = configuredWebAuthnRpId || fallbackRpId;
   return { rpID, origin };
 };
 
@@ -141,11 +173,22 @@ app.post('/api/auth/register-verify', async (req, res) => {
 
       res.json({ verified: true });
     } else {
-      res.status(400).json({ verified: false });
+      const details = getWebAuthnConfig(req);
+      res.status(400).json({
+        verified: false,
+        error: 'Falha na verificação do registro biométrico.',
+        hint: 'Valide RP ID/Origin e recadastre a biometria neste domínio.',
+        webauthn: details,
+      });
     }
   } catch (error) {
     console.error(error);
-    res.status(400).json({ error: (error as any).message });
+    const details = getWebAuthnConfig(req);
+    res.status(400).json({
+      error: (error as any).message,
+      hint: 'Verifique WEBAUTHN_RP_ID (somente dominio) e WEBAUTHN_ORIGIN (https://dominio).',
+      webauthn: details,
+    });
   } finally {
     challenges.delete(email);
   }
@@ -213,11 +256,22 @@ app.post('/api/auth/login-verify', async (req, res) => {
       const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
       res.json({ verified: true, user: { id: user.id, nome: user.nome, email: user.email }, token });
     } else {
-      res.status(401).json({ verified: false });
+      const details = getWebAuthnConfig(req);
+      res.status(401).json({
+        verified: false,
+        error: 'Falha na verificação da autenticação biométrica.',
+        hint: 'Recadastre a biometria no mesmo domínio do app e tente novamente.',
+        webauthn: details,
+      });
     }
   } catch (error) {
     console.error(error);
-    res.status(400).json({ error: (error as any).message });
+    const details = getWebAuthnConfig(req);
+    res.status(400).json({
+      error: (error as any).message,
+      hint: 'Verifique WEBAUTHN_RP_ID (somente dominio) e WEBAUTHN_ORIGIN (https://dominio).',
+      webauthn: details,
+    });
   } finally {
     challenges.delete(email);
   }

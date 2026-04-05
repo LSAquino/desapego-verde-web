@@ -35,11 +35,15 @@ const RegisterBiometrics: React.FC = () => {
       });
 
       const verifData = await verifyResp.json();
+      if (!verifyResp.ok) {
+        throw new Error(verifData.error || verifData.hint || 'Falha na verificação da biometria');
+      }
+
       if (verifData.verified) {
         message.success('Biometria cadastrada com sucesso!');
         navigate('/');
       } else {
-        message.error('Falha na verificação da biometria');
+        message.error(verifData.error || verifData.hint || 'Falha na verificação da biometria');
       }
     } catch (error: any) {
       console.error(error);

@@ -62,12 +62,16 @@ const Login: React.FC = () => {
       });
 
       const verifData = await verifyResp.json();
+      if (!verifyResp.ok) {
+        throw new Error(verifData.error || verifData.hint || 'Falha na autenticação biométrica');
+      }
+
       if (verifData.verified) {
         message.success('Autenticação biométrica bem sucedida!');
         login(verifData.user, verifData.token);
         navigate('/');
       } else {
-        message.error('Falha na autenticação');
+        message.error(verifData.error || verifData.hint || 'Falha na autenticação biométrica');
       }
     } catch (error: any) {
       console.error(error);
