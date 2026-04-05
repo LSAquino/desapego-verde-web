@@ -58,7 +58,7 @@ const Login: React.FC = () => {
       const verifyResp = await fetch(apiUrl('/api/auth/login-verify'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, body: asseResp }),
+        body: JSON.stringify({ email, body: asseResp, challenge: opts.challenge }),
       });
 
       const verifData = await verifyResp.json();

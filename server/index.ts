@@ -51,6 +51,8 @@ const normalizeRpId = (value?: string) => {
 const configuredWebAuthnOrigin = normalizeOrigin(WEBAUTHN_ORIGIN);
 const configuredWebAuthnRpId = normalizeRpId(WEBAUTHN_RP_ID);
 
+const challengeKey = (flow: 'register' | 'login', email: string) => `${flow}:${email}`;
+
 const toSafeBigInt = (value: unknown) => {
   if (typeof value === 'bigint') {
     return value;
@@ -154,17 +156,21 @@ app.get('/api/auth/register-challenge', async (req, res) => {
     },
   });
 
-  challenges.set(user.email, options.challenge);
+  challenges.set(challengeKey('register', user.email), options.challenge);
   res.json(options);
 });
 
 app.post('/api/auth/register-verify', async (req, res) => {
   const { rpID, origin } = getWebAuthnConfig(req);
-  const { email, body } = req.body;
+  const { email, body, challenge } = req.body;
   const user: any = await prisma.usuario.findUnique({ where: { email } });
-  const expectedChallenge = challenges.get(email);
+  const expectedChallenge = challenge || challenges.get(challengeKey('register', email));
 
-  if (!user || !expectedChallenge) return res.status(400).json({ error: 'Dados inválidos' });
+  if (!user || !expectedChallenge) {
+    return res.status(400).json({
+      error: 'Desafio biométrico ausente ou expirado. Tente novamente.',
+    });
+  }
 
   try {
     const verification: any = await verifyRegistrationResponse({
@@ -209,7 +215,7 @@ app.post('/api/auth/register-verify', async (req, res) => {
       webauthn: details,
     });
   } finally {
-    challenges.delete(email);
+    challenges.delete(challengeKey('register', email));
   }
 });
 
@@ -234,20 +240,24 @@ app.get('/api/auth/login-challenge', async (req, res) => {
     userVerification: 'preferred',
   });
 
-  challenges.set(email, options.challenge);
+  challenges.set(challengeKey('login', email), options.challenge);
   res.json(options);
 });
 
 app.post('/api/auth/login-verify', async (req, res) => {
   const { rpID, origin } = getWebAuthnConfig(req);
-  const { email, body } = req.body;
+  const { email, body, challenge } = req.body;
   const user: any = await prisma.usuario.findUnique({
     where: { email },
     include: { autenticadores: true } as any
   });
-  const expectedChallenge = challenges.get(email);
+  const expectedChallenge = challenge || challenges.get(challengeKey('login', email));
 
-  if (!user || !expectedChallenge) return res.status(400).json({ error: 'Dados inválidos' });
+  if (!user || !expectedChallenge) {
+    return res.status(400).json({
+      error: 'Desafio biométrico ausente ou expirado. Tente novamente.',
+    });
+  }
 
   const autenticador = user.autenticadores.find((a: any) => a.credential_id === body.id);
   if (!autenticador) return res.status(404).json({ error: 'Autenticador não encontrado' });
@@ -300,7 +310,7 @@ app.post('/api/auth/login-verify', async (req, res) => {
       webauthn: details,
     });
   } finally {
-    challenges.delete(email);
+    challenges.delete(challengeKey('login', email));
   }
 });
 

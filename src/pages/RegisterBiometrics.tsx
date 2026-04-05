@@ -31,7 +31,7 @@ const RegisterBiometrics: React.FC = () => {
       const verifyResp = await fetch(apiUrl('/api/auth/register-verify'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: user.email, body: attResp }),
+        body: JSON.stringify({ email: user.email, body: attResp, challenge: opts.challenge }),
       });
 
       const verifData = await verifyResp.json();
