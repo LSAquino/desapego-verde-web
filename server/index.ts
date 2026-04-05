@@ -176,11 +176,14 @@ app.post('/api/auth/register-verify', async (req, res) => {
 
     if (verification.verified && verification.registrationInfo) {
       const { credentialID, credentialPublicKey, counter } = verification.registrationInfo;
+      const normalizedCredentialId = typeof body?.id === 'string' && body.id.length > 0
+        ? body.id
+        : isoBase64URL.fromBuffer(credentialID);
 
       await (prisma as any).autenticador.create({
         data: {
           usuario_id: user.id,
-          credential_id: isoBase64URL.fromBuffer(credentialID),
+          credential_id: normalizedCredentialId,
           public_key: isoBase64URL.fromBuffer(credentialPublicKey),
           counter: toSafeBigInt(counter),
           transports: body.response.transports?.join(','),
