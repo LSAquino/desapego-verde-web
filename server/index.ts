@@ -336,9 +336,9 @@ app.get('/api/auth/login-challenge', async (req, res) => {
     allowCredentials: isUsernameLessFlow
       ? undefined
       : authenticators.map((auth: any) => ({
-          id: auth.credential_id,
-          type: 'public-key',
-        })),
+        id: auth.credential_id,
+        type: 'public-key',
+      })),
   });
 
   challenges.set(challengeKey('login', email || 'discoverable'), options.challenge);
