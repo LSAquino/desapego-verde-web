@@ -93,6 +93,18 @@ const findAuthenticatorsByUserId = (userId: number) => {
   });
 };
 
+const findAuthenticatorByCredentialId = (credentialId: string) => {
+  return (prisma as any).autenticador.findFirst({
+    where: { credential_id: credentialId },
+  });
+};
+
+const findUserById = (userId: number) => {
+  return prisma.usuario.findUnique({
+    where: { id: userId },
+  });
+};
+
 const pickUserWithAuthenticator = async (email: string) => {
   const users: any[] = await findUsersByEmailWithAuthenticators(email);
 
@@ -300,30 +312,36 @@ app.post('/api/auth/register-verify', async (req, res) => {
 app.get('/api/auth/login-challenge', async (req, res) => {
   const { rpID } = getWebAuthnConfig(req);
   const email = normalizeEmail(req.query.email);
-  if (!email) return res.status(400).json({ error: 'Email inválido.' });
-  const { user, authenticators } = await pickUserWithAuthenticator(email);
+  const isUsernameLessFlow = !email;
 
-  if (!user) {
-    return res.status(404).json({ error: 'Usuário não encontrado para login biométrico.' });
-  }
+  let authenticators: any[] = [];
+  if (!isUsernameLessFlow) {
+    const result = await pickUserWithAuthenticator(email);
+    if (!result.user) {
+      return res.status(404).json({ error: 'Usuário não encontrado para login biométrico.' });
+    }
+    authenticators = result.authenticators;
 
-  if (authenticators.length === 0) {
-    return res.status(400).json({
-      error: 'Nenhuma biometria cadastrada para este usuário.',
-      hint: 'Cadastre a biometria novamente no dispositivo atual.',
-    });
+    if (authenticators.length === 0) {
+      return res.status(400).json({
+        error: 'Nenhuma biometria cadastrada para este usuário.',
+        hint: 'Cadastre a biometria novamente no dispositivo atual.',
+      });
+    }
   }
 
   const options = await generateAuthenticationOptions({
     rpID,
-    allowCredentials: authenticators.map((auth: any) => ({
-      id: auth.credential_id,
-      type: 'public-key',
-    })),
     userVerification: 'preferred',
+    allowCredentials: isUsernameLessFlow
+      ? undefined
+      : authenticators.map((auth: any) => ({
+          id: auth.credential_id,
+          type: 'public-key',
+        })),
   });
 
-  challenges.set(challengeKey('login', email), options.challenge);
+  challenges.set(challengeKey('login', email || 'discoverable'), options.challenge);
   res.json(options);
 });
 
@@ -331,19 +349,42 @@ app.post('/api/auth/login-verify', async (req, res) => {
   const { rpID, origin } = getWebAuthnConfig(req);
   const { body, challenge } = req.body;
   const email = normalizeEmail(req.body?.email);
-  if (!email) return res.status(400).json({ error: 'Email inválido.' });
 
-  const { user, authenticators } = await pickUserWithAuthenticator(email);
-  if (!user) return res.status(404).json({ error: 'Usuário não encontrado para biometria.' });
+  const isUsernameLessFlow = !email;
+  let user: any = null;
+  let authenticators: any[] = [];
 
-  const expectedChallenge = challenge || challenges.get(challengeKey('login', email));
+  if (isUsernameLessFlow) {
+    const authenticator = await findAuthenticatorByCredentialId(body?.id);
+    if (!authenticator) {
+      return res.status(404).json({ error: 'Nenhuma biometria cadastrada para este dispositivo.' });
+    }
+
+    user = await findUserById(authenticator.usuario_id);
+    if (!user) {
+      return res.status(404).json({ error: 'Usuário vinculado à biometria não encontrado.' });
+    }
+    authenticators = [authenticator];
+  } else {
+    const result = await pickUserWithAuthenticator(email);
+    user = result.user;
+    authenticators = result.authenticators;
+
+    if (!user) return res.status(404).json({ error: 'Usuário não encontrado para biometria.' });
+
+    const authenticator = authenticators.find((a: any) => a.credential_id === body.id);
+    if (!authenticator) return res.status(404).json({ error: 'Autenticador não encontrado' });
+    authenticators = [authenticator];
+  }
+
+  const expectedChallenge = challenge || challenges.get(challengeKey('login', email || 'discoverable'));
   if (!expectedChallenge) {
     return res.status(400).json({
       error: 'Desafio biométrico ausente ou expirado. Gere um novo desafio e tente novamente.',
     });
   }
 
-  const autenticador = authenticators.find((a: any) => a.credential_id === body.id);
+  const autenticador = authenticators[0];
   if (!autenticador) return res.status(404).json({ error: 'Autenticador não encontrado' });
 
   try {

@@ -39,15 +39,9 @@ const Login: React.FC = () => {
   };
 
   const loginWithBiometrics = async () => {
-    const rawEmail = form.getFieldValue('email');
-    const email = typeof rawEmail === 'string' ? rawEmail.trim().toLowerCase() : '';
-    if (!email) {
-      return message.warning('Insira seu email para usar biometria');
-    }
-
     try {
       setLoading(true);
-      const resp = await fetch(apiUrl(`/api/auth/login-challenge?email=${encodeURIComponent(email)}`));
+      const resp = await fetch(apiUrl('/api/auth/login-challenge'));
       if (!resp.ok) {
         const err = await resp.json();
         throw new Error(err.error || 'Erro ao buscar desafio');
@@ -59,7 +53,7 @@ const Login: React.FC = () => {
       const verifyResp = await fetch(apiUrl('/api/auth/login-verify'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, body: asseResp, challenge: opts.challenge }),
+        body: JSON.stringify({ body: asseResp, challenge: opts.challenge }),
       });
 
       const verifData = await verifyResp.json();
