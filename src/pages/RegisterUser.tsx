@@ -3,6 +3,7 @@ import { Form, Input, Button, Card, message } from 'antd';
 import { User as UserIcon, Mail, Lock, MapPin } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { apiUrl } from '../lib/api';
 
 const RegisterUser: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -12,13 +13,13 @@ const RegisterUser: React.FC = () => {
   const onFinish = async (values: any) => {
     setLoading(true);
     try {
-      const response = await fetch('/api/auth/register', {
+      const response = await fetch(apiUrl('/api/auth/register'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values),
       });
       const data = await response.json();
-      
+
       if (response.ok) {
         message.success('Cadastro realizado com sucesso!');
         login(data.user, data.token);

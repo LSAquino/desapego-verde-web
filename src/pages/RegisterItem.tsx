@@ -3,6 +3,7 @@ import { Form, Input, Button, Card, Select, message, Upload } from 'antd';
 import { Upload as UploadIcon, Package } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { apiUrl } from '../lib/api';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -14,7 +15,7 @@ const RegisterItem: React.FC = () => {
   const { token } = useAuth();
 
   useEffect(() => {
-    fetch('/api/categories')
+    fetch(apiUrl('/api/categories'))
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) setCategories(data);
@@ -32,7 +33,7 @@ const RegisterItem: React.FC = () => {
     }
 
     try {
-      const response = await fetch('/api/items', {
+      const response = await fetch(apiUrl('/api/items'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

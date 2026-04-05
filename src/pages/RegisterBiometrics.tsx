@@ -4,6 +4,7 @@ import { Fingerprint, CheckCircle, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { startRegistration } from '@simplewebauthn/browser';
 import { useNavigate } from 'react-router-dom';
+import { apiUrl } from '../lib/api';
 
 const RegisterBiometrics: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -15,13 +16,13 @@ const RegisterBiometrics: React.FC = () => {
     setLoading(true);
 
     try {
-      const resp = await fetch(`/api/auth/register-challenge?email=${encodeURIComponent(user.email)}`);
+      const resp = await fetch(apiUrl(`/api/auth/register-challenge?email=${encodeURIComponent(user.email)}`));
       if (!resp.ok) throw new Error('Erro ao buscar desafio de registro');
       const opts = await resp.json();
 
       const attResp = await startRegistration(opts);
 
-      const verifyResp = await fetch('/api/auth/register-verify', {
+      const verifyResp = await fetch(apiUrl('/api/auth/register-verify'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: user.email, body: attResp }),

@@ -2,6 +2,16 @@
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
+## Deploy Frontend + Backend separado
+
+Quando o frontend estiver na Vercel e o backend estiver em outro host, configure a URL base da API:
+
+1. Defina `VITE_API_URL` na Vercel com o domínio público do backend.
+2. Exemplo: `VITE_API_URL=https://api.seu-dominio.com`
+3. Em desenvolvimento local, `VITE_API_URL` pode ficar vazio para usar o proxy `/api` do Vite.
+
+Arquivo de referência: `.env.example`.
+
 Currently, two official plugins are available:
 
 - [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)

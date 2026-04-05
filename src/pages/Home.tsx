@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Card, Tag, Spin, Result, Button } from 'antd';
 import { MapPin, Calendar, User as UserIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { apiUrl } from '../lib/api';
 
 interface Item {
   id: number;
@@ -21,7 +22,7 @@ const Home: React.FC = () => {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    fetch('/api/items')
+    fetch(apiUrl('/api/items'))
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -99,7 +100,7 @@ const Home: React.FC = () => {
                   <Tag className="mb-3 bg-gray-50 border-gray-200 text-gray-600">{item.categoria.nome}</Tag>
                   <p className="text-gray-600 text-sm mb-4 line-clamp-2" title={item.descricao}>{item.descricao}</p>
                 </div>
-                
+
                 <div className="pt-3 border-t border-gray-100 space-y-2">
                   <div className="flex items-center text-xs text-gray-500">
                     <UserIcon size={14} className="mr-1.5 text-green-600" />

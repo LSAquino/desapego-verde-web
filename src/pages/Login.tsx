@@ -4,6 +4,7 @@ import { Mail, Lock, Fingerprint } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { startAuthentication } from '@simplewebauthn/browser';
+import { apiUrl } from '../lib/api';
 
 const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -14,13 +15,13 @@ const Login: React.FC = () => {
   const onFinish = async (values: any) => {
     setLoading(true);
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch(apiUrl('/api/auth/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values),
       });
       const data = await response.json();
-      
+
       if (response.ok) {
         message.success('Login realizado com sucesso!');
         login(data.user, data.token);
@@ -43,7 +44,7 @@ const Login: React.FC = () => {
 
     try {
       setLoading(true);
-      const resp = await fetch(`/api/auth/login-challenge?email=${encodeURIComponent(email)}`);
+      const resp = await fetch(apiUrl(`/api/auth/login-challenge?email=${encodeURIComponent(email)}`));
       if (!resp.ok) {
         const err = await resp.json();
         throw new Error(err.error || 'Erro ao buscar desafio');
@@ -52,7 +53,7 @@ const Login: React.FC = () => {
 
       const asseResp = await startAuthentication(opts);
 
-      const verifyResp = await fetch('/api/auth/login-verify', {
+      const verifyResp = await fetch(apiUrl('/api/auth/login-verify'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, body: asseResp }),
@@ -107,8 +108,8 @@ const Login: React.FC = () => {
           <Divider plain className="text-gray-400 text-xs my-4">OU</Divider>
 
           <Form.Item>
-            <Button 
-              icon={<Fingerprint size={18} />} 
+            <Button
+              icon={<Fingerprint size={18} />}
               className="w-full h-10 text-green-700 border-green-200 hover:border-green-600 hover:text-green-600 transition-colors"
               onClick={loginWithBiometrics}
               loading={loading}
