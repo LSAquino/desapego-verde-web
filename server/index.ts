@@ -249,18 +249,28 @@ app.post('/api/auth/register-verify', async (req, res) => {
     });
 
     if (verification.verified && verification.registrationInfo) {
-      const { credentialID, credentialPublicKey, counter } = verification.registrationInfo;
-      const normalizedCredentialId = typeof body?.id === 'string' && body.id.length > 0
-        ? body.id
-        : isoBase64URL.fromBuffer(credentialID);
+      const { credential, counter } = verification.registrationInfo;
+      if (!credential?.id || !credential?.publicKey) {
+        return res.status(400).json({
+          verified: false,
+          error: 'Chave pública ou credential ID ausente na resposta da biometria.',
+          hint: 'Cadastre a biometria novamente no dispositivo atual.',
+        });
+      }
+      const normalizedCredentialId = typeof credential.id === 'string' && credential.id.length > 0
+        ? credential.id
+        : typeof body?.id === 'string' && body.id.length > 0
+          ? body.id
+          : isoBase64URL.fromBuffer(Buffer.from(credential.id));
+      const normalizedPublicKey = isoBase64URL.fromBuffer(Buffer.from(credential.publicKey));
 
       await (prisma as any).autenticador.create({
         data: {
           usuario_id: user.id,
           credential_id: normalizedCredentialId,
-          public_key: isoBase64URL.fromBuffer(credentialPublicKey),
+          public_key: normalizedPublicKey,
           counter: toSafeBigInt(counter),
-          transports: body.response.transports?.join(','),
+          transports: credential.transports?.join(','),
         },
       });
 
