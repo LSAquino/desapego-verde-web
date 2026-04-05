@@ -5,14 +5,20 @@ import { useAuth } from '../context/AuthContext';
 import { startRegistration } from '@simplewebauthn/browser';
 import { useNavigate } from 'react-router-dom';
 import { apiUrl } from '../lib/api';
+import { isStandalonePwa } from '../lib/pwa';
 
 const RegisterBiometrics: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
+  const standalonePwa = isStandalonePwa();
 
   const handleRegister = async () => {
     if (!user) return;
+    if (!standalonePwa) {
+      message.warning('A biometria só pode ser ativada no app PWA instalado');
+      return;
+    }
     setLoading(true);
 
     try {
@@ -55,8 +61,12 @@ const RegisterBiometrics: React.FC = () => {
         <div className="p-8">
           <Alert
             message="Importante"
-            description="Isso permitirá que você entre no Desapego Verde neste dispositivo sem precisar digitar sua senha."
-            type="info"
+            description={
+              standalonePwa
+                ? 'Isso permitirá que você entre no Desapego Verde neste dispositivo sem precisar digitar sua senha.'
+                : 'Instale o PWA para ativar biometria como recurso nativo do aplicativo.'
+            }
+            type={standalonePwa ? 'info' : 'warning'}
             showIcon
             className="mb-8"
           />
@@ -91,6 +101,7 @@ const RegisterBiometrics: React.FC = () => {
               className="h-12 bg-green-600 hover:bg-green-500 border-none text-lg font-semibold shadow-lg"
               onClick={handleRegister}
               loading={loading}
+              disabled={!standalonePwa}
             >
               Ativar Biometria Agora
             </Button>

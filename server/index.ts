@@ -15,18 +15,37 @@ const app = express();
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key-desapego';
+const WEBAUTHN_RP_ID = process.env.WEBAUTHN_RP_ID;
+const WEBAUTHN_ORIGIN = process.env.WEBAUTHN_ORIGIN;
+const CORS_ORIGINS = process.env.CORS_ORIGINS;
 
 // In-memory challenge store (Use Redis/Session in production)
 const challenges = new Map<string, string>();
 
-app.use(cors());
+const allowedOrigins = CORS_ORIGINS
+  ? CORS_ORIGINS.split(',').map((origin) => origin.trim()).filter(Boolean)
+  : [];
+
+app.use(cors({
+  origin: allowedOrigins.length > 0 ? allowedOrigins : true,
+  credentials: true,
+}));
 app.use(express.json());
 
 // Helper to get RP_ID and ORIGIN dynamically
 const getWebAuthnConfig = (req: any) => {
   const host = req.headers.host || 'localhost:5173';
-  const origin = req.headers.origin || `http://${host}`;
-  const rpID = host.split(':')[0]; // Remove port
+  const fallbackOrigin = req.headers.origin || `http://${host}`;
+
+  let fallbackRpId = host.split(':')[0];
+  try {
+    fallbackRpId = new URL(fallbackOrigin).hostname;
+  } catch {
+    // Keep host-based fallback when origin is not a full URL.
+  }
+
+  const origin = WEBAUTHN_ORIGIN || fallbackOrigin;
+  const rpID = WEBAUTHN_RP_ID || fallbackRpId;
   return { rpID, origin };
 };
 
@@ -34,7 +53,7 @@ const getWebAuthnConfig = (req: any) => {
 app.post('/api/auth/register', async (req, res) => {
   try {
     const { nome, email, senha, cidade } = req.body;
-    
+
     const existingUser = await prisma.usuario.findUnique({ where: { email } });
     if (existingUser) {
       return res.status(400).json({ error: 'Email já cadastrado.' });
@@ -63,7 +82,7 @@ app.post('/api/auth/register', async (req, res) => {
 app.get('/api/auth/register-challenge', async (req, res) => {
   const { rpID } = getWebAuthnConfig(req);
   const email = req.query.email as string;
-  const user: any = await prisma.usuario.findUnique({ 
+  const user: any = await prisma.usuario.findUnique({
     where: { email },
     include: { autenticadores: true } as any
   });
@@ -135,7 +154,7 @@ app.post('/api/auth/register-verify', async (req, res) => {
 app.get('/api/auth/login-challenge', async (req, res) => {
   const { rpID } = getWebAuthnConfig(req);
   const email = req.query.email as string;
-  const user: any = await prisma.usuario.findUnique({ 
+  const user: any = await prisma.usuario.findUnique({
     where: { email },
     include: { autenticadores: true } as any
   });
@@ -160,7 +179,7 @@ app.get('/api/auth/login-challenge', async (req, res) => {
 app.post('/api/auth/login-verify', async (req, res) => {
   const { rpID, origin } = getWebAuthnConfig(req);
   const { email, body } = req.body;
-  const user: any = await prisma.usuario.findUnique({ 
+  const user: any = await prisma.usuario.findUnique({
     where: { email },
     include: { autenticadores: true } as any
   });
@@ -209,7 +228,7 @@ app.post('/api/auth/login-verify', async (req, res) => {
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, senha } = req.body;
-    
+
     const user = await prisma.usuario.findUnique({ where: { email } });
     if (!user) {
       return res.status(400).json({ error: 'Credenciais inválidas.' });
@@ -234,7 +253,7 @@ const authenticate = (req: any, res: any, next: any) => {
   if (!authHeader) {
     return res.status(401).json({ error: 'Não autorizado.' });
   }
-  
+
   const token = authHeader.split(' ')[1];
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
@@ -259,7 +278,7 @@ app.get('/api/categories', async (req, res) => {
 app.post('/api/items', authenticate, async (req, res) => {
   try {
     const { titulo, descricao, categoria_id, tipo_oferta, imagem_url } = req.body;
-    
+
     const item = await prisma.item.create({
       data: {
         titulo,

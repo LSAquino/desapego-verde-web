@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, Card, message, Divider } from 'antd';
+import { Form, Input, Button, Card, message, Divider, Alert } from 'antd';
 import { Mail, Lock, Fingerprint } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { startAuthentication } from '@simplewebauthn/browser';
 import { apiUrl } from '../lib/api';
+import { isStandalonePwa } from '../lib/pwa';
 
 const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
   const navigate = useNavigate();
   const { login } = useAuth();
+  const standalonePwa = isStandalonePwa();
 
   const onFinish = async (values: any) => {
     setLoading(true);
@@ -107,16 +109,26 @@ const Login: React.FC = () => {
 
           <Divider plain className="text-gray-400 text-xs my-4">OU</Divider>
 
-          <Form.Item>
-            <Button
-              icon={<Fingerprint size={18} />}
-              className="w-full h-10 text-green-700 border-green-200 hover:border-green-600 hover:text-green-600 transition-colors"
-              onClick={loginWithBiometrics}
-              loading={loading}
-            >
-              Acessar com Biometria
-            </Button>
-          </Form.Item>
+          {standalonePwa ? (
+            <Form.Item>
+              <Button
+                icon={<Fingerprint size={18} />}
+                className="w-full h-10 text-green-700 border-green-200 hover:border-green-600 hover:text-green-600 transition-colors"
+                onClick={loginWithBiometrics}
+                loading={loading}
+              >
+                Acessar com Biometria
+              </Button>
+            </Form.Item>
+          ) : (
+            <Alert
+              type="info"
+              showIcon
+              className="mb-6"
+              message="Biometria disponível no app instalado"
+              description="Instale este PWA na tela inicial para ativar login biométrico como recurso nativo."
+            />
+          )}
         </Form>
         <div className="text-center mt-4 text-gray-500 text-sm">
           Ainda não tem conta? <Link to="/register" className="text-green-600 font-medium hover:underline">Cadastre-se</Link>
