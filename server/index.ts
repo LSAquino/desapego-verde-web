@@ -51,6 +51,22 @@ const normalizeRpId = (value?: string) => {
 const configuredWebAuthnOrigin = normalizeOrigin(WEBAUTHN_ORIGIN);
 const configuredWebAuthnRpId = normalizeRpId(WEBAUTHN_RP_ID);
 
+const toSafeBigInt = (value: unknown) => {
+  if (typeof value === 'bigint') {
+    return value;
+  }
+
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return BigInt(value);
+  }
+
+  if (typeof value === 'string' && value.trim() !== '') {
+    return BigInt(value);
+  }
+
+  return BigInt(0);
+};
+
 // In-memory challenge store (Use Redis/Session in production)
 const challenges = new Map<string, string>();
 
@@ -166,7 +182,7 @@ app.post('/api/auth/register-verify', async (req, res) => {
           usuario_id: user.id,
           credential_id: isoBase64URL.fromBuffer(credentialID),
           public_key: isoBase64URL.fromBuffer(credentialPublicKey),
-          counter: BigInt(counter),
+          counter: toSafeBigInt(counter),
           transports: body.response.transports?.join(','),
         },
       });
@@ -249,10 +265,10 @@ app.post('/api/auth/login-verify', async (req, res) => {
     if (verification.verified) {
       // Update counter
       const newCounter = verification.authenticationInfo?.newCounter;
-      if (typeof newCounter === 'number') {
+      if (newCounter !== undefined && newCounter !== null) {
         await (prisma as any).autenticador.update({
           where: { id: autenticador.id },
-          data: { counter: BigInt(newCounter) }
+          data: { counter: toSafeBigInt(newCounter) }
         });
       } else {
         console.warn('WebAuthn verified without newCounter; skipping counter update.', {
