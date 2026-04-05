@@ -248,10 +248,18 @@ app.post('/api/auth/login-verify', async (req, res) => {
 
     if (verification.verified) {
       // Update counter
-      await (prisma as any).autenticador.update({
-        where: { id: autenticador.id },
-        data: { counter: BigInt(verification.authenticationInfo.newCounter) }
-      });
+      const newCounter = verification.authenticationInfo?.newCounter;
+      if (typeof newCounter === 'number') {
+        await (prisma as any).autenticador.update({
+          where: { id: autenticador.id },
+          data: { counter: BigInt(newCounter) }
+        });
+      } else {
+        console.warn('WebAuthn verified without newCounter; skipping counter update.', {
+          userId: user.id,
+          credentialId: autenticador.id,
+        });
+      }
 
       const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
       res.json({ verified: true, user: { id: user.id, nome: user.nome, email: user.email }, token });
