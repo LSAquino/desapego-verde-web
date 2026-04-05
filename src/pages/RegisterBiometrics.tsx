@@ -15,6 +15,11 @@ const RegisterBiometrics: React.FC = () => {
 
   const handleRegister = async () => {
     if (!user) return;
+    const email = typeof user.email === 'string' ? user.email.trim().toLowerCase() : '';
+    if (!email) {
+      message.error('Email do usuário inválido para biometria');
+      return;
+    }
     if (!standalonePwa) {
       message.warning('A biometria só pode ser ativada no app PWA instalado');
       return;
@@ -22,7 +27,7 @@ const RegisterBiometrics: React.FC = () => {
     setLoading(true);
 
     try {
-      const resp = await fetch(apiUrl(`/api/auth/register-challenge?email=${encodeURIComponent(user.email)}`));
+      const resp = await fetch(apiUrl(`/api/auth/register-challenge?email=${encodeURIComponent(email)}`));
       if (!resp.ok) throw new Error('Erro ao buscar desafio de registro');
       const opts = await resp.json();
 
@@ -31,7 +36,7 @@ const RegisterBiometrics: React.FC = () => {
       const verifyResp = await fetch(apiUrl('/api/auth/register-verify'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: user.email, body: attResp, challenge: opts.challenge }),
+        body: JSON.stringify({ email, body: attResp, challenge: opts.challenge }),
       });
 
       const verifData = await verifyResp.json();

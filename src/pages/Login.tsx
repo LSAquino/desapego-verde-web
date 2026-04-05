@@ -39,7 +39,8 @@ const Login: React.FC = () => {
   };
 
   const loginWithBiometrics = async () => {
-    const email = form.getFieldValue('email');
+    const rawEmail = form.getFieldValue('email');
+    const email = typeof rawEmail === 'string' ? rawEmail.trim().toLowerCase() : '';
     if (!email) {
       return message.warning('Insira seu email para usar biometria');
     }
