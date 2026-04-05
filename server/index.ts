@@ -58,6 +58,60 @@ const normalizeEmail = (value: unknown) => {
   return value.trim().toLowerCase();
 };
 
+const findUserByEmail = (email: string) => {
+  return prisma.usuario.findFirst({
+    where: {
+      email: {
+        equals: email,
+        mode: 'insensitive',
+      },
+    },
+    orderBy: { id: 'desc' },
+  });
+};
+
+const findUsersByEmailWithAuthenticators = (email: string) => {
+  return (prisma as any).usuario.findMany({
+    where: {
+      email: {
+        equals: email,
+        mode: 'insensitive',
+      },
+    },
+    include: { autenticadores: true },
+    orderBy: { id: 'desc' },
+  });
+};
+
+const findAuthenticatorsByUserId = (userId: number) => {
+  return (prisma as any).autenticador.findMany({
+    where: {
+      usuario_id: userId,
+      credential_id: { not: '' },
+      public_key: { not: '' },
+    },
+  });
+};
+
+const pickUserWithAuthenticator = async (email: string) => {
+  const users: any[] = await findUsersByEmailWithAuthenticators(email);
+
+  for (const user of users) {
+    const validAuthenticators = (user.autenticadores || []).filter((auth: any) => auth.credential_id && auth.public_key);
+    if (validAuthenticators.length > 0) {
+      return { user, authenticators: validAuthenticators };
+    }
+  }
+
+  const fallbackUser = users[0];
+  if (!fallbackUser) {
+    return { user: null, authenticators: [] };
+  }
+
+  const authenticators = await findAuthenticatorsByUserId(fallbackUser.id);
+  return { user: fallbackUser, authenticators };
+};
+
 const toSafeBigInt = (value: unknown) => {
   if (typeof value === 'bigint') {
     return value;
@@ -107,9 +161,14 @@ const getWebAuthnConfig = (req: any) => {
 // Auth Routes
 app.post('/api/auth/register', async (req, res) => {
   try {
-    const { nome, email, senha, cidade } = req.body;
+    const { nome, senha, cidade } = req.body;
+    const email = normalizeEmail(req.body?.email);
 
-    const existingUser = await prisma.usuario.findUnique({ where: { email } });
+    if (!email) {
+      return res.status(400).json({ error: 'Email inválido.' });
+    }
+
+    const existingUser = await findUserByEmail(email);
     if (existingUser) {
       return res.status(400).json({ error: 'Email já cadastrado.' });
     }
@@ -138,12 +197,11 @@ app.get('/api/auth/register-challenge', async (req, res) => {
   const { rpID } = getWebAuthnConfig(req);
   const email = normalizeEmail(req.query.email);
   if (!email) return res.status(400).json({ error: 'Email inválido.' });
-  const user: any = await prisma.usuario.findUnique({
-    where: { email },
-    include: { autenticadores: true } as any
-  });
+  const user: any = await findUserByEmail(email);
 
   if (!user) return res.status(404).json({ error: 'Usuário não encontrado' });
+
+  const autenticadores = await findAuthenticatorsByUserId(user.id);
 
   const options = await generateRegistrationOptions({
     rpName: 'Desapego Verde',
@@ -151,7 +209,7 @@ app.get('/api/auth/register-challenge', async (req, res) => {
     userID: Uint8Array.from(user.id.toString(), (c: any) => c.charCodeAt(0)),
     userName: user.email,
     attestationType: 'none',
-    excludeCredentials: user.autenticadores.map((auth: any) => ({
+    excludeCredentials: autenticadores.map((auth: any) => ({
       id: auth.credential_id,
       type: 'public-key',
     })),
@@ -172,7 +230,7 @@ app.post('/api/auth/register-verify', async (req, res) => {
   const email = normalizeEmail(req.body?.email);
   if (!email) return res.status(400).json({ error: 'Email inválido.' });
 
-  const user: any = await prisma.usuario.findUnique({ where: { email } });
+  const user: any = await findUserByEmail(email);
   if (!user) return res.status(404).json({ error: 'Usuário não encontrado para biometria.' });
 
   const expectedChallenge = challenge || challenges.get(challengeKey('register', email));
@@ -233,18 +291,22 @@ app.get('/api/auth/login-challenge', async (req, res) => {
   const { rpID } = getWebAuthnConfig(req);
   const email = normalizeEmail(req.query.email);
   if (!email) return res.status(400).json({ error: 'Email inválido.' });
-  const user: any = await prisma.usuario.findUnique({
-    where: { email },
-    include: { autenticadores: true } as any
-  });
+  const { user, authenticators } = await pickUserWithAuthenticator(email);
 
-  if (!user || user.autenticadores.length === 0) {
-    return res.status(400).json({ error: 'Nenhuma biometria cadastrada' });
+  if (!user) {
+    return res.status(404).json({ error: 'Usuário não encontrado para login biométrico.' });
+  }
+
+  if (authenticators.length === 0) {
+    return res.status(400).json({
+      error: 'Nenhuma biometria cadastrada para este usuário.',
+      hint: 'Cadastre a biometria novamente no dispositivo atual.',
+    });
   }
 
   const options = await generateAuthenticationOptions({
     rpID,
-    allowCredentials: user.autenticadores.map((auth: any) => ({
+    allowCredentials: authenticators.map((auth: any) => ({
       id: auth.credential_id,
       type: 'public-key',
     })),
@@ -261,10 +323,7 @@ app.post('/api/auth/login-verify', async (req, res) => {
   const email = normalizeEmail(req.body?.email);
   if (!email) return res.status(400).json({ error: 'Email inválido.' });
 
-  const user: any = await prisma.usuario.findUnique({
-    where: { email },
-    include: { autenticadores: true } as any
-  });
+  const { user, authenticators } = await pickUserWithAuthenticator(email);
   if (!user) return res.status(404).json({ error: 'Usuário não encontrado para biometria.' });
 
   const expectedChallenge = challenge || challenges.get(challengeKey('login', email));
@@ -274,7 +333,7 @@ app.post('/api/auth/login-verify', async (req, res) => {
     });
   }
 
-  const autenticador = user.autenticadores.find((a: any) => a.credential_id === body.id);
+  const autenticador = authenticators.find((a: any) => a.credential_id === body.id);
   if (!autenticador) return res.status(404).json({ error: 'Autenticador não encontrado' });
 
   try {
@@ -333,9 +392,14 @@ app.post('/api/auth/login-verify', async (req, res) => {
 
 app.post('/api/auth/login', async (req, res) => {
   try {
-    const { email, senha } = req.body;
+    const { senha } = req.body;
+    const email = normalizeEmail(req.body?.email);
 
-    const user = await prisma.usuario.findUnique({ where: { email } });
+    if (!email) {
+      return res.status(400).json({ error: 'Credenciais inválidas.' });
+    }
+
+    const user = await findUserByEmail(email);
     if (!user) {
       return res.status(400).json({ error: 'Credenciais inválidas.' });
     }
