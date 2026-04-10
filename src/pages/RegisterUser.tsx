@@ -6,7 +6,9 @@ import { useAuth } from '../context/AuthContext';
 import { apiUrl } from '../lib/api';
 
 const RegisterUser: React.FC = () => {
+  const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const [loadingLocation, setLoadingLocation] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -34,6 +36,45 @@ const RegisterUser: React.FC = () => {
     }
   };
 
+  const handleGetLocation = async () => {
+    setLoadingLocation(true);
+    if (!navigator.geolocation) {
+      message.error('Geolocalização não suportada');
+      setLoadingLocation(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+          const data = await response.json();
+          
+          if (data && data.address) {
+            const cityName = data.address.city || data.address.town || data.address.village;
+            if (cityName) {
+              form.setFieldsValue({ cidade: cityName });
+              message.success('Localização encontrada com sucesso!');
+            } else {
+              message.error('Não foi possível determinar a cidade');
+            }
+          } else {
+            message.error('Endereço não encontrado');
+          }
+        } catch (error) {
+          message.error('Erro ao buscar o endereço da localização');
+        } finally {
+          setLoadingLocation(false);
+        }
+      },
+      (error) => {
+        message.error('Erro ao obter sua localização');
+        setLoadingLocation(false);
+      }
+    );
+  };
+
   return (
     <div className="flex justify-center py-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <Card className="w-full max-w-lg shadow-xl border-y-4 border-y-green-600 rounded-xl">
@@ -42,7 +83,7 @@ const RegisterUser: React.FC = () => {
           <p className="text-gray-500">Junte-se ao Desapego Verde e faça a diferença</p>
         </div>
 
-        <Form layout="vertical" onFinish={onFinish} requiredMark={false} className="space-y-4">
+        <Form form={form} layout="vertical" onFinish={onFinish} requiredMark={false} className="space-y-4">
           <Form.Item
             name="nome"
             label={<span className="font-medium text-gray-700">Nome Completo</span>}
@@ -71,11 +112,22 @@ const RegisterUser: React.FC = () => {
           </Form.Item>
 
           <Form.Item
-            name="cidade"
             label={<span className="font-medium text-gray-700">Cidade (Opcional)</span>}
             className="mb-6"
           >
-            <Input prefix={<MapPin size={18} className="text-gray-400" />} placeholder="Sua cidade" size="large" />
+            <div className="grid grid-cols-[1fr_auto] gap-2">
+              <Form.Item name="cidade" noStyle>
+                <Input prefix={<MapPin size={18} className="text-gray-400" />} placeholder="Sua cidade" size="large" />
+              </Form.Item>
+              <Button 
+                onClick={handleGetLocation} 
+                loading={loadingLocation} 
+                icon={<MapPin size={18} />} 
+                size="large"
+              >
+                Buscar minha cidade
+              </Button>
+            </div>
           </Form.Item>
 
           <Form.Item className="mb-0">
