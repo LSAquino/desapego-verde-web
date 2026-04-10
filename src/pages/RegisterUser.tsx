@@ -54,7 +54,7 @@ const RegisterUser: React.FC = () => {
           if (data && data.address) {
             const cityName = data.address.city || data.address.town || data.address.village;
             if (cityName) {
-              form.setFieldsValue({ cidade: cityName });
+              form.setFieldsValue({ cidade: cityName, endereco: data.display_name });
               message.success('Localização encontrada com sucesso!');
             } else {
               message.error('Não foi possível determinar a cidade');
@@ -107,23 +107,30 @@ const RegisterUser: React.FC = () => {
             <Input.Password prefix={<Lock size={18} className="text-gray-400" />} placeholder="Sua senha secreta" size="large" />
           </Form.Item>
 
+          <Button 
+            className="w-full mb-4 border-green-600 text-green-600 hover:border-green-500 hover:text-green-500 h-10 font-medium" 
+            type="dashed" 
+            onClick={handleGetLocation} 
+            loading={loadingLocation} 
+            icon={<MapPin size={18} />} 
+          >
+            Usar minha localização atual
+          </Button>
+
           <Form.Item
+            name="endereco"
+            label={<span className="font-medium text-gray-700">Endereço Completo</span>}
+            className="mb-4"
+          >
+            <Input.TextArea rows={2} placeholder="Seu endereço completo aparecerá aqui" />
+          </Form.Item>
+
+          <Form.Item
+            name="cidade"
             label={<span className="font-medium text-gray-700">Cidade (Opcional)</span>}
             className="mb-6"
           >
-            <div className="grid grid-cols-[1fr_auto] gap-2">
-              <Form.Item name="cidade" noStyle>
-                <Input prefix={<MapPin size={18} className="text-gray-400" />} placeholder="Sua cidade" size="large" />
-              </Form.Item>
-              <Button 
-                onClick={handleGetLocation} 
-                loading={loadingLocation} 
-                icon={<MapPin size={18} />} 
-                size="large"
-              >
-                Buscar minha cidade
-              </Button>
-            </div>
+            <Input prefix={<MapPin size={18} className="text-gray-400" />} placeholder="Sua cidade" size="large" />
           </Form.Item>
 
           <Form.Item className="mb-0">
