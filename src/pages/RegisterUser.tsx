@@ -68,10 +68,6 @@ const RegisterUser: React.FC = () => {
           setLoadingLocation(false);
         }
       },
-      (error) => {
-        message.error('Erro ao obter sua localização');
-        setLoadingLocation(false);
-      }
     );
   };
 
