@@ -122,12 +122,12 @@ const RegisterUser: React.FC = () => {
             label={<span className="font-medium text-gray-700">Endereço Completo</span>}
             className="mb-4"
           >
-            <Input.TextArea rows={2} placeholder="Seu endereço completo aparecerá aqui" />
+            <Input.TextArea rows={2} placeholder="Endereço completo" />
           </Form.Item>
 
           <Form.Item
             name="cidade"
-            label={<span className="font-medium text-gray-700">Cidade (Opcional)</span>}
+            label={<span className="font-medium text-gray-700">Cidade</span>}
             className="mb-6"
           >
             <Input prefix={<MapPin size={18} className="text-gray-400" />} placeholder="Sua cidade" size="large" />

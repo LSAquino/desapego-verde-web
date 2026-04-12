@@ -32,6 +32,24 @@ export default defineConfig({
       devOptions: {
         enabled: true,
         type: 'module'
+      },
+      workbox: {
+        runtimeCaching: [
+          {
+            urlPattern: /\/api\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'desapego-api-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 * 7
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          }
+        ]
       }
     })
   ],
