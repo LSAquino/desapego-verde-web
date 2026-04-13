@@ -522,6 +522,34 @@ app.post('/api/items', authenticate, async (req, res) => {
   }
 });
 
+app.delete('/api/items/:id', authenticate, async (req, res) => {
+  try {
+    const itemId = Number(req.params.id);
+    if (!Number.isInteger(itemId) || itemId <= 0) {
+      return res.status(400).json({ error: 'ID de item inválido.' });
+    }
+
+    const item = await prisma.item.findUnique({
+      where: { id: itemId },
+      select: { id: true, usuario_id: true },
+    });
+
+    if (!item) {
+      return res.status(404).json({ error: 'Item não encontrado.' });
+    }
+
+    if (item.usuario_id !== (req as any).userId) {
+      return res.status(403).json({ error: 'Você não tem permissão para excluir este item.' });
+    }
+
+    await prisma.item.delete({ where: { id: itemId } });
+    res.status(200).json({ success: true });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao excluir item.' });
+  }
+});
+
 app.get('/api/items', async (req, res) => {
   try {
     const items = await prisma.item.findMany({

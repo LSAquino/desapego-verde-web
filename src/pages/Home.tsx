@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Tag, Spin, Result, Button } from 'antd';
-import { MapPin, Calendar, User as UserIcon } from 'lucide-react';
+import { Card, Tag, Spin, Result, Button, Popconfirm, message } from 'antd';
+import { MapPin, Calendar, User as UserIcon, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { apiUrl } from '../lib/api';
+import { useAuth } from '../context/AuthContext';
 
 interface Item {
   id: number;
@@ -13,13 +14,15 @@ interface Item {
   imagem_url: string | null;
   data_criacao: string;
   categoria: { nome: string };
-  usuario: { nome: string; cidade: string; reputacao: number };
+  usuario: { id: number; nome: string; cidade: string; reputacao: number };
 }
 
 const Home: React.FC = () => {
+  const { user, token } = useAuth();
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   useEffect(() => {
     fetch(apiUrl('/api/items'))
@@ -48,6 +51,35 @@ const Home: React.FC = () => {
       />
     );
   }
+
+  const handleDeleteItem = async (itemId: number) => {
+    if (!token) {
+      message.error('Você precisa estar logado para excluir itens.');
+      return;
+    }
+
+    try {
+      setDeletingId(itemId);
+      const response = await fetch(apiUrl(`/api/items/${itemId}`), {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao excluir item');
+      }
+
+      setItems((prevItems) => prevItems.filter((item) => item.id !== itemId));
+      message.success('Item excluído com sucesso!');
+    } catch (deleteError: any) {
+      message.error(deleteError.message || 'Erro ao excluir item');
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   return (
     <div className="animate-in fade-in duration-500">
@@ -116,6 +148,27 @@ const Home: React.FC = () => {
                     <Calendar size={14} className="mr-1.5" />
                     <span>{new Date(item.data_criacao).toLocaleDateString()}</span>
                   </div>
+                  {user?.id === item.usuario.id && (
+                    <div className="pt-2">
+                      <Popconfirm
+                        title="Excluir item"
+                        description="Tem certeza que deseja excluir este item?"
+                        okText="Excluir"
+                        cancelText="Cancelar"
+                        okButtonProps={{ danger: true }}
+                        onConfirm={() => handleDeleteItem(item.id)}
+                      >
+                        <Button
+                          danger
+                          size="small"
+                          icon={<Trash2 size={14} />}
+                          loading={deletingId === item.id}
+                        >
+                          Excluir
+                        </Button>
+                      </Popconfirm>
+                    </div>
+                  )}
                 </div>
               </div>
             </Card>
