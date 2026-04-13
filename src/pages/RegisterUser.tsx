@@ -50,7 +50,7 @@ const RegisterUser: React.FC = () => {
           const { latitude, longitude } = position.coords;
           const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
           const data = await response.json();
-          
+
           if (data && data.address) {
             const cityName = data.address.city || data.address.town || data.address.village;
             if (cityName) {
@@ -107,12 +107,12 @@ const RegisterUser: React.FC = () => {
             <Input.Password prefix={<Lock size={18} className="text-gray-400" />} placeholder="Sua senha secreta" size="large" />
           </Form.Item>
 
-          <Button 
-            className="w-full mb-4 border-emerald-700 text-emerald-800 hover:border-emerald-600 hover:text-emerald-700 h-10 font-medium" 
-            type="dashed" 
-            onClick={handleGetLocation} 
-            loading={loadingLocation} 
-            icon={<MapPin size={18} />} 
+          <Button
+            className="w-full mb-4 border-emerald-700 text-emerald-800 hover:border-emerald-600 hover:text-emerald-700 h-10 font-medium"
+            type="dashed"
+            onClick={handleGetLocation}
+            loading={loadingLocation}
+            icon={<MapPin size={18} />}
           >
             Usar minha localização atual
           </Button>
