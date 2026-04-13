@@ -77,12 +77,12 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="flex justify-center items-center h-[75vh] animate-in fade-in zoom-in duration-300">
+    <div className="flex justify-center items-center min-h-[calc(100dvh-8rem)] py-6 animate-in fade-in zoom-in duration-300">
       <Card className="w-full max-w-md shadow-xl border-0">
         <div className="text-center mb-8">
           <div className="text-4xl mb-2">🌱</div>
-          <h1 className="text-2xl font-bold text-gray-800">Bem-vindo de volta</h1>
-          <p className="text-gray-500">Entre na sua conta para continuar</p>
+          <h1 className="text-2xl font-bold text-gray-900">Bem-vindo de volta</h1>
+          <p className="text-gray-700">Entre na sua conta para continuar</p>
         </div>
 
         <Form form={form} layout="vertical" onFinish={onFinish} requiredMark={false}>
@@ -101,7 +101,7 @@ const Login: React.FC = () => {
           </Form.Item>
 
           <Form.Item className="mb-2">
-            <Button type="primary" htmlType="submit" className="w-full bg-green-600 hover:bg-green-500 h-10 text-base border-none shadow-md" loading={loading}>
+            <Button type="primary" htmlType="submit" className="w-full bg-emerald-700 hover:bg-emerald-600 h-10 text-base border-none shadow-md" loading={loading}>
               Entrar
             </Button>
           </Form.Item>
@@ -112,7 +112,7 @@ const Login: React.FC = () => {
             <Form.Item>
               <Button
                 icon={<Fingerprint size={18} />}
-                className="w-full h-10 text-green-700 border-green-200 hover:border-green-600 hover:text-green-600 transition-colors"
+                className="w-full h-10 text-emerald-900 border-emerald-300 hover:border-emerald-700 hover:text-emerald-700 transition-colors"
                 onClick={loginWithBiometrics}
                 loading={loading}
               >
@@ -129,8 +129,8 @@ const Login: React.FC = () => {
             />
           )}
         </Form>
-        <div className="text-center mt-4 text-gray-500 text-sm">
-          Ainda não tem conta? <Link to="/register" className="text-green-600 font-medium hover:underline">Cadastre-se</Link>
+        <div className="text-center mt-4 text-gray-700 text-sm">
+          Ainda não tem conta? <Link to="/register" className="text-emerald-800 font-medium hover:underline">Cadastre-se</Link>
         </div>
       </Card>
     </div>

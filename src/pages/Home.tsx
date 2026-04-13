@@ -83,13 +83,13 @@ const Home: React.FC = () => {
 
   return (
     <div className="animate-in fade-in duration-500">
-      <div className="flex justify-between items-center mb-8 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8 bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Desapegos Recentes</h1>
-          <p className="text-gray-500">Encontre itens doados na sua região ou faça uma doação!</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">Desapegos Recentes</h1>
+          <p className="text-gray-700 text-sm sm:text-base">Encontre itens doados na sua região ou faça uma doação!</p>
         </div>
-        <Link to="/items/new">
-          <Button type="primary" size="large" className="bg-green-600 hover:bg-green-500 border-none shadow-md hover:shadow-lg transition-all">
+        <Link to="/items/new" className="shrink-0">
+          <Button type="primary" size="large" className="w-full sm:w-auto bg-emerald-700 hover:bg-emerald-600 border-none shadow-md hover:shadow-lg transition-all">
             Doar um Item
           </Button>
         </Link>
@@ -98,8 +98,8 @@ const Home: React.FC = () => {
       {items.length === 0 ? (
         <div className="text-center py-20 bg-white rounded-xl shadow-sm border border-gray-100">
           <div className="text-6xl mb-4">🌱</div>
-          <h2 className="text-xl font-semibold text-gray-700">Nenhum item disponível ainda</h2>
-          <p className="text-gray-500 mt-2">Seja o primeiro a doar um item!</p>
+          <h2 className="text-xl font-semibold text-gray-900">Nenhum item disponível ainda</h2>
+          <p className="text-gray-700 mt-2">Seja o primeiro a doar um item!</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -128,23 +128,23 @@ const Home: React.FC = () => {
             >
               <div className="flex flex-col h-full justify-between">
                 <div>
-                  <h3 className="font-bold text-lg text-gray-800 mb-1 line-clamp-1" title={item.titulo}>{item.titulo}</h3>
+                  <h3 className="font-bold text-lg text-gray-900 mb-1 line-clamp-1" title={item.titulo}>{item.titulo}</h3>
                   <Tag className="mb-3 bg-gray-50 border-gray-200 text-gray-600">{item.categoria.nome}</Tag>
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-2" title={item.descricao}>{item.descricao}</p>
+                  <p className="text-gray-700 text-sm mb-4 line-clamp-2" title={item.descricao}>{item.descricao}</p>
                 </div>
 
                 <div className="pt-3 border-t border-gray-100 space-y-2">
-                  <div className="flex items-center text-xs text-gray-500">
-                    <UserIcon size={14} className="mr-1.5 text-green-600" />
+                  <div className="flex items-center text-xs text-gray-700">
+                    <UserIcon size={14} className="mr-1.5 text-emerald-700" />
                     <span className="truncate">{item.usuario.nome} (Rep.: {item.usuario.reputacao.toFixed(1)})</span>
                   </div>
                   {item.usuario.cidade && (
-                    <div className="flex items-center text-xs text-gray-500">
-                      <MapPin size={14} className="mr-1.5 text-green-600" />
+                    <div className="flex items-center text-xs text-gray-700">
+                      <MapPin size={14} className="mr-1.5 text-emerald-700" />
                       <span className="truncate">{item.usuario.cidade}</span>
                     </div>
                   )}
-                  <div className="flex items-center text-xs text-gray-400">
+                  <div className="flex items-center text-xs text-gray-600">
                     <Calendar size={14} className="mr-1.5" />
                     <span>{new Date(item.data_criacao).toLocaleDateString()}</span>
                   </div>

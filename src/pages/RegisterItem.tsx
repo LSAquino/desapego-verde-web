@@ -60,10 +60,10 @@ const RegisterItem: React.FC = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto py-8 animate-in fade-in duration-500">
+    <div className="max-w-3xl mx-auto py-4 sm:py-8 animate-in fade-in duration-500">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Doar um Item</h1>
-        <p className="text-gray-500">Preencha os dados do item que você deseja desapegar</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Doar um Item</h1>
+        <p className="text-gray-700">Preencha os dados do item que você deseja desapegar</p>
       </div>
 
       <Card className="shadow-lg border-0 rounded-xl">
@@ -121,28 +121,30 @@ const RegisterItem: React.FC = () => {
                   <UploadIcon size={48} />
                 </p>
                 <p className="ant-upload-text font-medium mt-2">Clique ou arraste a imagem para cá</p>
-                <p className="ant-upload-hint text-gray-500">Adicionar uma foto ajuda muito na doação!</p>
+                <p className="ant-upload-hint text-gray-700">Adicionar uma foto ajuda muito na doação!</p>
               </Upload.Dragger>
             </Form.Item>
           </div>
 
-          <Form.Item className="mb-0 mt-4 flex justify-end text-right">
-            <Button
-              onClick={() => navigate('/')}
-              className="mr-3 hover:bg-gray-100 font-medium"
-              size="large"
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="primary"
-              htmlType="submit"
-              className="bg-green-600 hover:bg-green-500 px-8 font-semibold shadow-md"
-              loading={loading}
-              size="large"
-            >
-              Publicar Item
-            </Button>
+          <Form.Item className="mb-0 mt-4">
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+              <Button
+                onClick={() => navigate('/')}
+                className="w-full sm:w-auto hover:bg-gray-100 font-medium"
+                size="large"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="primary"
+                htmlType="submit"
+                className="w-full sm:w-auto bg-emerald-700 hover:bg-emerald-600 px-8 font-semibold shadow-md"
+                loading={loading}
+                size="large"
+              >
+                Publicar Item
+              </Button>
+            </div>
           </Form.Item>
         </Form>
       </Card>

@@ -72,11 +72,11 @@ const RegisterUser: React.FC = () => {
   };
 
   return (
-    <div className="flex justify-center py-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="flex justify-center py-4 sm:py-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <Card className="w-full max-w-lg shadow-xl border-y-4 border-y-green-600 rounded-xl">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-800">Crie sua Conta</h1>
-          <p className="text-gray-500">Junte-se ao Desapego Verde e faça a diferença</p>
+          <h1 className="text-2xl font-bold text-gray-900">Crie sua Conta</h1>
+          <p className="text-gray-700">Junte-se ao Desapego Verde e faça a diferença</p>
         </div>
 
         <Form form={form} layout="vertical" onFinish={onFinish} requiredMark={false} className="space-y-4">
@@ -108,7 +108,7 @@ const RegisterUser: React.FC = () => {
           </Form.Item>
 
           <Button 
-            className="w-full mb-4 border-green-600 text-green-600 hover:border-green-500 hover:text-green-500 h-10 font-medium" 
+            className="w-full mb-4 border-emerald-700 text-emerald-800 hover:border-emerald-600 hover:text-emerald-700 h-10 font-medium" 
             type="dashed" 
             onClick={handleGetLocation} 
             loading={loadingLocation} 
@@ -134,13 +134,13 @@ const RegisterUser: React.FC = () => {
           </Form.Item>
 
           <Form.Item className="mb-0">
-            <Button type="primary" htmlType="submit" className="w-full bg-green-600 hover:bg-green-500 h-12 text-base font-semibold border-none shadow-md" loading={loading}>
+            <Button type="primary" htmlType="submit" className="w-full bg-emerald-700 hover:bg-emerald-600 h-12 text-base font-semibold border-none shadow-md" loading={loading}>
               Cadastrar
             </Button>
           </Form.Item>
         </Form>
-        <div className="text-center mt-6 text-gray-500 text-sm">
-          Já tem conta? <Link to="/login" className="text-green-600 font-medium hover:underline">Faça login</Link>
+        <div className="text-center mt-6 text-gray-700 text-sm">
+          Já tem conta? <Link to="/login" className="text-emerald-800 font-medium hover:underline">Faça login</Link>
         </div>
       </Card>
     </div>

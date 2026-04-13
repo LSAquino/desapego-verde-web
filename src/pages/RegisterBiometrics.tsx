@@ -59,15 +59,15 @@ const RegisterBiometrics: React.FC = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto py-12 animate-in fade-in slide-in-from-top-4 duration-500">
+    <div className="max-w-2xl mx-auto py-4 sm:py-12 animate-in fade-in slide-in-from-top-4 duration-500">
       <Card className="shadow-xl rounded-2xl border-0 overflow-hidden">
-        <div className="bg-green-700 p-8 text-center text-white">
+        <div className="bg-emerald-900 p-5 sm:p-8 text-center text-white">
           <ShieldCheck size={64} className="mx-auto mb-4 opacity-90" />
           <h1 className="text-2xl font-bold">Segurança Biométrica</h1>
           <p className="opacity-80">Acesse sua conta mais rápido usando FaceID ou Impressão Digital</p>
         </div>
 
-        <div className="p-8">
+        <div className="p-4 sm:p-8">
           <Alert
             message="Importante"
             description={
@@ -86,8 +86,8 @@ const RegisterBiometrics: React.FC = () => {
                 <CheckCircle size={20} />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-800">Mais Rapidez</h3>
-                <p className="text-gray-500 text-sm">Entre na conta em segundos com apenas um toque.</p>
+                <h3 className="font-semibold text-gray-900">Mais Rapidez</h3>
+                <p className="text-gray-700 text-sm">Entre na conta em segundos com apenas um toque.</p>
               </div>
             </div>
 
@@ -96,18 +96,18 @@ const RegisterBiometrics: React.FC = () => {
                 <CheckCircle size={20} />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-800">Mais Segurança</h3>
-                <p className="text-gray-500 text-sm">Seus dados biométricos nunca saem do seu dispositivo.</p>
+                <h3 className="font-semibold text-gray-900">Mais Segurança</h3>
+                <p className="text-gray-700 text-sm">Seus dados biométricos nunca saem do seu dispositivo.</p>
               </div>
             </div>
           </div>
 
-          <div className="mt-12 flex flex-col gap-3">
+          <div className="mt-8 sm:mt-12 flex flex-col gap-3">
             <Button
               type="primary"
               size="large"
               icon={<Fingerprint size={20} />}
-              className="h-12 bg-green-600 hover:bg-green-500 border-none text-lg font-semibold shadow-lg"
+              className="h-12 bg-emerald-700 hover:bg-emerald-600 border-none text-lg font-semibold shadow-lg"
               onClick={handleRegister}
               loading={loading}
               disabled={!standalonePwa}
@@ -116,7 +116,7 @@ const RegisterBiometrics: React.FC = () => {
             </Button>
             <Button
               type="link"
-              className="text-gray-500 hover:text-gray-700"
+              className="text-gray-700 hover:text-gray-900"
               onClick={() => navigate('/')}
             >
               Talvez mais tarde
