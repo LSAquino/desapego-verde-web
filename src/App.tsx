@@ -67,7 +67,7 @@ const Navigation = () => {
 
       {/* Menu mobile expandido */}
       {menuOpen && (
-        <div className="md:hidden border-t border-emerald-800 bg-emerald-900 px-4 pb-4 flex flex-col gap-1">
+        <div className="md:hidden border-t border-emerald-800 bg-emerald-900 px-4 pb-4 flex flex-col items-center gap-1">
           {user ? (
             <>
               <span className="font-medium text-white pt-3 pb-1">Olá, {user.nome}</span>
@@ -107,7 +107,6 @@ function App() {
       theme={{
         token: {
           colorPrimary: '#166534',
-          colorLink: '#166534',
           colorText: '#111827',
         },
       }}
